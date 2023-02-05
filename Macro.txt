@@ -1,0 +1,57 @@
+ Solution:
+.MODEL SMALL
+ 
+ PERS MACRO VAR1
+PUSH AX
+PUSH DX  
+
+MOV CX,0
+
+MOV AX, VAR1 
+  
+AG:
+
+CMP AL,0 
+JE DONE 
+ 
+INC CH 
+
+MOV BL,10 
+
+DIV BL 
+
+MOV BH,AH 
+
+MOV DX,AX 
+
+MOV AX,2
+DIV BH
+CMP AH,1
+INC CL 
+ 
+MOV AX,DX 
+JMP AG
+
+
+ 
+DONE: 
+MOV AL,CH
+MOV AH,0
+DIV CL
+;MOV RES,DL 
+POP DX
+POP AX
+ ENDM 
+ 
+ .data
+V1 DW 73H
+
+ 
+.CODE  
+
+ 
+ PERS V1
+
+
+.EXIT 
+END

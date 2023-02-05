@@ -1,0 +1,55 @@
+`timescale 1ns / 1ps
+module test_GCD_Calculator;
+  reg reset;
+  reg [15:0] number1, number2;
+  reg S;
+  integer i;
+  reg Clk;
+  wire [15:0] gcd;
+  
+  GCD_Calculator UUT (.reset(reset), .Clk(Clk), .S(S), .number1(number1), .number2(number2), .gcd(gcd) );
+  initial begin
+   $dumpfile("dump.vcd");
+   $dumpvars;
+   Clk=0;
+    reset=0;
+    S=0;
+    #30;
+    
+    reset= 1;
+    #30;
+    
+    number1=16'h002D;
+    number2=16'h001E;
+    #20;
+    
+     S=1;
+    #20;
+    
+    reset= 1;
+    S= 0;
+    #600;
+    
+    number1=16'h07B2; 
+    number2=16'h042A; 
+    #20;
+    
+     S=1; #20;
+    
+    S=0; #600;
+     number1=16'h1770; 
+    number2=16'h1770 ;
+    #20;
+    
+    S=1; #20;
+    S=0; #600;
+           
+  end
+  initial begin
+    for(i=0 ; i<500; i=i+1)
+      begin
+        #5 Clk <= ~Clk;
+      end
+  end
+  
+endmodule

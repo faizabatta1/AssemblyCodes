@@ -1,0 +1,244 @@
+column dw 8
+row dw 4
+
+.CODE
+
+MOV BX, 01110111B
+
+COL1:
+MOV AX, BX  
+mov dx,column
+OUT dx, AX ;COLUMN represents the column port number 
+mov dx,row
+IN AX, dx ;read row value 
+
+AND AX, 0FF00H ;if D0-D3 is used, then AND AL ,0FH 
+CMP AX, 0FE00H ;check if first row/button is pressed
+ 
+JNE L2 
+MOV Dx, '1';decode the value 
+
+ JMP COL2
+;==============================  2 
+L2:  
+
+CMP AX, 0FD00H;check second row/button
+JNE L3 
+MOV DL,'2' 
+CALL DELAY 
+JMP COL2
+;==============================  3
+L3:
+ 
+CMP AX, 0FB00H
+ JNE L4 
+MOV DL,'3' 
+CALL DELAY 
+JMP COL2
+;==============================  4
+L4:
+ 
+CMP AX, 0F700H
+ JNE L5 
+MOV DL,'4' 
+CALL DELAY 
+JMP COL2
+;==============================  5
+L5:
+
+CMP AX, 0EF00H 
+MOV DL,'5' 
+CALL DELAY 
+JMP COL2 
+
+;===============================================  col2 
+COL2:
+ MOV BX, 1     ;scan second column
+ MOV AX, BX
+ OUT dx, AX
+ IN AX, dx
+ AND AX,0FF0H
+ CMP AX, 0FE00H 
+
+JNE L0 
+MOV DL,'9' 
+CALL DELAY 
+JMP COL3 
+;==============================  6
+L0:  
+
+CMP Ax, 7F00H
+ JNE LA 
+MOV DL,'6' 
+CALL DELAY 
+JMP COL3
+;==============================  7
+
+LA:  
+
+CMP AX, 0FB00H
+ JNE LB 
+MOV DL,'7' 
+CALL DELAY 
+JMP COL3
+;==============================  8
+LB:  
+
+CMP AX, 0F700H
+ JNE LC 
+MOV DL,'8' 
+CALL DELAY 
+JMP COL3
+;==============================  9
+LC:
+
+CMP AX, 0EF00H
+ JNE LD 
+MOV Dx,'9' 
+CALL DELAY 
+JMP COL3          
+;==============================  10
+LD:  
+
+CMP AX,0DF00H
+MOV DL,'0' 
+CALL DELAY 
+JMP COL3
+
+;===============================================  col3 
+COL3:
+ROL BX, 1     ;scan second column
+ MOV AX, BX
+ OUT dx, AX
+ IN AX, dx
+ AND AX,0FF0H
+ CMP AX, 0FE00H 
+JNE LH 
+MOV DL,'0' 
+CALL DELAY 
+JMP COL4
+;==============================  11 
+LH: 
+
+CMP AX, 0FD00H;check second row/button
+ JNE LI 
+MOV DL,'11' 
+CALL DELAY 
+JMP COL4
+;==============================  12
+LI:
+
+CMP AX, 0FB00H
+ JNE LJ 
+MOV DL,'12' 
+CALL DELAY 
+JMP COL4
+;==============================  13
+LJ:         
+
+CMP AX, 0F700H
+ JNE LK 
+MOV DL,'13' 
+CALL DELAY 
+JMP COL4
+;==============================  14
+LK:
+
+CMP AX, 0EF00H
+ JNE LL 
+MOV DL,'14' 
+CALL DELAY  
+JMP COL4 
+;==============================  15
+LL:    
+call dep
+CMP AX,0DF00H
+ JNE LM 
+MOV DL,'15' 
+CALL DELAY 
+JMP COL4 
+
+;===============================================  col4 
+COL4:
+ROL BX, 1     ;scan second column
+ MOV AX, BX
+ OUT dx, AX
+ IN AX, dx
+ AND AX,0FF0H
+ CMP AX, 0FE00H 
+JNE LP 
+MOV DL,'O' 
+CALL DELAY 
+
+
+
+;==============================  16
+LP: 
+
+CMP AX, 0FD00H;check second row/button
+ JNE LQ 
+MOV DL,'16' 
+CALL WRITECHAR 
+
+;==============================  17
+LQ:  
+
+CMP AX, 0FB00H
+ JNE LR 
+MOV DL,'17' 
+CALL DELAY 
+
+;==============================  18
+LR:  
+
+CMP AX, 0F700H
+ JNE LS 
+MOV DL,'18' 
+CALL DELAY 
+
+;==============================  19
+LS:   
+
+CMP AX, 0EF00H
+ JNE LT 
+MOV DL,'19' 
+CALL DELAY 
+
+;==============================  20
+LT: 
+
+CMP AX,0DF00H
+ JNE LU 
+MOV DL,'20' 
+CALL DELAY 
+
+.EXIT
+
+PROC DELAY NEAR 
+    PUSH CX
+    MOV CX,100
+    LOP:
+    NOP
+    LOOP LOP 
+    POP CX
+    RET
+ENDP  
+
+PROC disp NEAR
+MOV SI, OFFSET DISP
+MOV AH, 7FH          
+
+MOV CX, 8 ;8 digits
+LP:
+MOV AL, AH
+OUT 81H, AL
+;activate first SSD
+MOV AL, [SI]
+;get value to display
+OUT 80H, AL
+;view on first display
+CALL DELAY
+;implement delay
+ROR AH, 1 ;activate next SSD
+INC SI
+ENDPLOOP LP

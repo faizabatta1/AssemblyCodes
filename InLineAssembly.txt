@@ -1,0 +1,62 @@
+#include<iostream>
+#include<string.h>
+using namespace std;
+
+		
+	
+void SortA(int* A) {
+
+	int count = 0;
+
+	__asm {
+
+		pusha
+		mov edi, A
+		mov cl,5
+		mov dl,5
+		l1 :
+		mov dl, 5
+		mov bl, byte ptr[edi]
+			l2:
+        mov al, byte ptr[edi+1]
+	    cmp bl,al
+			ja grat
+
+		grat:
+		mov byte ptr[edi],bl
+		mov byte ptr[edi+1], al
+        inc edi
+		dec dl
+		cmp dl,0
+		loop l1
+            inc edi
+			dec dl
+        jmp l2
+			
+			popa
+}
+
+}
+
+
+
+
+int main()
+{
+	
+	int values[5];
+
+	printf("Enter 5 integers: ");
+	for (int i = 0; i < 5; ++i) {
+		scanf("%d", &values[i]);
+	}
+	SortA(values);
+
+	printf("Displaying integers: ");
+	for (int i = 0; i < 5; ++i) {
+		printf("%d\n", values[i]);
+	}
+
+	return 0;
+
+}

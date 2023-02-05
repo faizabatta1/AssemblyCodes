@@ -1,0 +1,312 @@
+.model small
+.8086
+.stack 200H
+.data
+msg db "Write the Equation with Operations (+,-,*,/),press 'Q' for exit$"
+
+opr db  '+'
+N1  DB  20 DUP (?)
+N2 	DB  20 DUP (?)  
+NEWLINE DB 10,13,"$"
+RESULT  DB  20 DUP (?)
+.code
+.startup
+
+        MOV AX,@DATA
+        MOV DS,AX
+
+ START: 
+
+        MOV AH,09H
+        LEA DX,NEWLINE
+        INT 21H 
+        
+        LEA DX,msg 
+        MOV AH,9
+        INT 21H 
+       
+        
+        MOV AH,09H
+        LEA DX,NEWLINE
+        INT 21H
+        
+;************************************
+
+        LEA SI,N1
+	CALL ReadNum  
+        CMP AL,'+'
+        JE PLUS
+        CMP AL,'-'
+        JE MINUS
+        CMP AL,'*'
+        JE MULTIPLY
+        CMP AL,'/'
+        JE DIVISION
+        
+        MOV AH,09H
+        LEA DX,NEWLINE
+        INT 21H   
+        
+        MOV AH,9
+        INT 21H
+        JMP START
+
+
+PLUS:  
+  
+        LEA SI,N1
+        CALL BCDToBin
+        MOV BX,AX
+
+
+        LEA SI,N2
+        CALL ReadNum 
+
+        CMP AL,'='
+        JE TP
+
+
+ TP:     LEA SI,N2
+        CALL BCDToBin
+
+        ADD AX,BX
+        LEA SI,RESULT
+        CALL BinToBCD 
+        CALL DispRes
+        
+        MOV AH,09H
+        LEA DX,NEWLINE
+        INT 21H
+  JMP START 
+
+
+;************************************
+  
+  MINUS:
+          LEA SI,N1
+         CALL BCDToBin
+
+         MOV BX,AX
+
+         LEA SI,N2
+         CALL ReadNum 
+         CMP AL,'='
+         JE TMI
+
+
+  TMI:    LEA SI,N2
+         CALL BCDToBin
+
+         SUB BX,AX
+         MOV AX,BX	
+         LEA SI,RESULT
+         CALL BinToBCD 
+         CALL DispRes
+         
+         MOV AH,09H
+        LEA DX,NEWLINE
+        INT 21H
+
+JMP START
+;************************************
+
+MULTIPLY:
+         LEA SI,N1
+         CALL BCDToBin
+
+         MOV BX,AX
+
+         LEA SI,N2
+         CALL ReadNum 
+         CMP AL,'='
+         JE TMU
+
+  TMU: 
+         LEA SI,N2
+         CALL BCDToBin
+
+         MUL BX	
+         LEA SI,RESULT
+         CALL BinToBCD 
+         CALL DispRes
+         
+        MOV AH,09H
+        LEA DX,NEWLINE
+        INT 21H
+
+JMP START
+;************************************
+
+
+DIVISION:
+          LEA SI,N1
+         CALL BCDToBin
+
+         MOV BX,AX
+
+         LEA SI,N2
+         CALL ReadNum 
+         CMP AL,'='
+         JE TDI
+
+ TDI:   LEA SI,N2
+         CALL BCDToBin
+         
+
+         PUSH AX
+         PUSH BX
+
+         MOV DX,0H
+         DIV BX 
+         PUSH DX  
+         LEA SI,RESULT
+         CALL BinToBCD 
+         CALL DispRes
+        
+
+         MOV AH,2
+         MOV DL,'.'
+         INT 21H
+
+         POP DX
+
+         MOV AX,DX
+         PUSH BX
+         mov bx,100
+         mul bx
+         POP BX   
+         DIV BX   
+         
+       
+         LEA SI,RESULT
+         CALL BinToBCD 
+         CALL DispRes
+         
+         MOV AH,09H
+        LEA DX,NEWLINE
+        INT 21H
+
+JMP START
+
+outt:
+	 .EXIT 
+
+;************************************
+
+; display whatever in Al to the screen
+displayChar PROC NEAR
+                PUSH DX
+                PUSH AX
+		 MOV  DL, AL
+		 MOV  AH, 2
+		 INT  21H
+		 POP  AX
+		 POP  DX
+		 RET
+displayChar ENDP
+;*************************************
+
+
+
+ReadChar PROC NEAR
+
+		 MOV  AH, 1
+		 INT  21H        
+		 RET
+ReadChar ENDP
+;*************************************
+
+
+
+; returns the operation in AL
+ReadNum PROC NEAR
+         MOV DI,0
+NXT_N:   CALL ReadChar
+           
+               sub al,30h
+
+
+                CMP AL,0
+                JAE C9
+                JMP  RN_DN
+
+       C9:    
+                CMP AL,9
+                JBE C0
+                JMP  RN_DN
+       C0:
+                MOV  [SI], Al
+	        INC  SI
+	        JMP  NXT_N
+             
+
+       RN_DN:   add al,30h
+                MOV  BYTE PTR[SI], 0FFH  ; FF marks the end of the number
+	        RET
+
+ReadNum ENDP
+;*******************************************
+
+BCDToBin PROC NEAR
+
+                        PUSH DX
+			PUSH CX
+			PUSH BX
+			MOV AX , 0 ; sum = 0 intially
+NXT_D:      MOV  BL, [SI]
+			CMP  BL, 0FFH
+			JE   BCD_DN
+            MOV  CX, 10
+			MUL  CX    ; DX:AX = AX * 10	
+			MOV  BH, 0
+			ADD  AX, BX     ; AX = AX + digit = previous sum+ digit
+			INC  SI
+			JMP  NXT_D
+BCD_DN:     POP BX
+            POP CX
+            POP DX
+			
+BCDToBin ENDP
+
+
+
+;*******************************************
+
+BinToBCD PROC NEAR 
+         PUSH AX
+         PUSH BX
+         PUSH DX      
+		 MOV  CX, 0
+NXT_DIV: MOV  DX, 0	
+         MOV  BX, 10
+		 DIV  BX
+		 MOV  [SI], DL
+		 INC  SI
+		 INC  CX   ; increment number of digits
+		 CMP  AX, 0 
+		 JNE  NXT_DIV
+		 POP DX
+		 POP BX
+		 POP AX
+		 RET
+BinToBCD ENDP
+
+
+
+;*******************************************
+DispRes PROC NEAR  
+         CMP CX, 0
+		 JE  Disp_DN
+		 DEC SI
+		 MOV DL, [SI]
+		 ADD DL, 30H
+		 MOV AH, 2
+		 INT 21H
+		 DEC  CX
+		 JMP DispRes
+
+Disp_DN:  RET
+        
+	DispRes ENDP	
+		
+end	

@@ -1,0 +1,83 @@
+  .MODEL SMALL
+ 
+  .STACK 100H 
+          
+  .DATA
+  
+  X DB 9,5,11,4,7,13,6,-3,8,12  
+  Y DB 10 DUP(?)
+ 
+  .CODE
+  MAIN PROC
+  MOV AX, @DATA
+  MOV DS, AX
+  
+  MOV CX,10
+  MOV SI,OFFSET X 
+  MOV DI,OFFSET Y  
+  
+  MOV BL,2
+  
+  MOV DI,0
+  
+  L:  
+  CMP SI,10
+  JE EQ 
+        
+  MOV AL, [SI] 
+  CMP AL,0
+  Je fi
+  
+  fi: 
+  MOV Y[DI],0 
+  INC DI
+  INC SI 
+  loop L
+
+
+  CMP AL,0
+  JA SEC
+  
+  SEC: 
+  MOV AH,0
+  DIV BL 
+  MOV CX,BX
+  
+  L2:
+  MOV AL, [SI]
+  MOV AH,0
+   
+  DIV BL
+  CMP AH,0
+  JA PRIM 
+  CMP AH,0
+  JE NOTPRIM
+  
+  LOOP L2
+  
+        
+  PRIM:
+  ;CMP AH,1
+  MOV Y[DI],0 
+  MOV DL,Y[DI]
+  INC DI
+  INC SI 
+  LOOP L
+  
+  
+  
+  NOTPRIM:
+  ;DIV BL
+  ;CMP AH,0
+  CMP AL,0 
+  JB THI
+  THI:
+  MOV Y[DI],1 
+  MOV DL,Y[DI]
+  INC DI
+  INC SI 
+  LOOP L
+  
+  EQ:
+
+  END  

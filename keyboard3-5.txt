@@ -1,0 +1,161 @@
+org 100h
+
+.model small 
+.data 
+X1 db 01H,02H,03H,04H ,05H,06H,07H,08H 
+X2 db 09H,0AH,0BH,0EH ,0FH,00H,00H,00H 
+x3 db 00H,00H,00H ,00H,00H,00H ,00H,00H
+x4 db 00H,00H,00H ,00H,00H,00H ,00H,00H
+
+.CODE 
+beginning:
+MOV DX, 0
+MOV BX, 07FH
+
+;and al,07fh ;invert top bit
+
+START:
+MOV AX, BX
+OUT 80H, AL 
+IN AL, 81H
+cmp al, 0fh ;CHECK_PRESS
+je deb
+call delay
+IN AL, 81H
+cmp al, 0fh ;pressed
+je deb 
+
+CMP AL, 0EH ;first
+JE ZERO 
+CMP AL, 0DH  ;second
+JE ONE
+CMP AL, 0BH ;third putton
+JE TWO
+CMP AL, 07H ; putton
+JE THREE
+
+deb:
+INC DX
+DEBOUCING:CMP DX, 4
+JE beginning
+JB INCREMENT
+
+INCREMENT:
+ROL BX,1 
+JMP START 
+ 
+ZERO: 
+MOV DI, 0
+jmp final
+
+ONE:MOV DI,1
+jmp final
+TWO:MOV DI,2
+jmp final
+THREE:MOV DI,3
+jmp final  
+final:CMP DX, 0 
+JE FIRSTROW
+cmp dx, 1
+JE SECONDROW
+cmp dx, 2
+JE THIRDROW 
+cmp dx, 3
+JE FORTHROW
+Jne beginning
+
+FIRSTROW: MOV SI, OFFSET X1
+ADD SI, DI
+JMP OUTPUT
+SECONDROW: MOV SI, OFFSET X2
+ADD SI, DI
+JMP OUTPUT
+THIRDROW: MOV SI, OFFSET X3
+ADD SI, DI
+JMP OUTPUT   
+FORTHROW: MOV SI, OFFSET X4
+ADD SI, DI
+JMP OUTPUT
+ 
+OUTPUT: ;seven segment desp
+
+MOV AL,0FEh
+OUT 90H, AL 
+MOV AL, [SI]
+OUT 91H, AL 
+jmp beginning
+
+;;;;;; stepper motor
+cmp bh,4
+jne next1
+
+mov ah,88h   ; to reset the value of step  
+mov cl,99h   ; to set the value of step
+ 
+
+mov ch,4
+call motorangle
+jmp next2
+
+next1:
+cmp bh,9
+jne next2 
+mov ch,9
+call motorangle
+
+next2:
+cmp ch,4
+jne next3
+call motorangle
+
+next3:
+cmp ch,9
+jne next4
+call motorangle
+
+next4: 
+mov dx,0ff11h  ;port b (output)
+out dx,al
+
+.exit 
+
+DELAY proc
+MOV CX, 1000 
+L1: NOP 
+LOOP L1
+RET
+delay endp
+ret
+
+
+motorangle proc
+    cmp ch,9
+    jne lastAngle
+  
+    mov al,ah
+    mov dx,0ff12h  ;port c 
+    out dx,al
+    ror ah,1
+    
+  call delay
+    jmp finishproc   
+    
+lastAngle:
+    
+    mov al,ah
+    mov dx,0ff12h  ;output
+    out dx,al
+    ror ah,1
+   
+      call delay
+    mov al,cl
+    mov dx,0ff12h  ;
+    out dx,al 
+    ror ah,1
+     
+      call delay    
+    
+finishproc:
+    ret
+endp
+

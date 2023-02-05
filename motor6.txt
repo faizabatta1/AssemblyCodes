@@ -1,0 +1,153 @@
+.model small
+.code
+mov ax,0 ; dec / inc speed
+out 88h,ax	
+switch:		;read buttons
+
+putt:
+  in al,92h
+  and al,0fh
+  cmp al,0fh
+  jnz putt 
+  
+call delay 
+
+again:
+in al,92h
+and al,0fh
+cmp al,0fh
+jz again
+
+call delay
+
+in al,92h
+and al,0fh
+cmp al,0fh
+jz again
+
+cmp al,0Eh ;increase speed switch #1110
+jne step1
+call incr 
+jmp endpr
+
+step1:
+
+cmp al,0Dh ;decrease speed switch #1101
+jne endpr
+call decr
+
+endpr:
+
+jmp switch
+
+
+
+decr proc
+    mov dx,100
+    cmp bx,dx
+    jz  print
+    add bx,20
+print:
+
+cmp bx,00h
+jne one
+mov bl,00h  ; 0 
+call seg
+
+one:
+cmp bh,20h
+jne two
+mov bl,02h  ;1
+call seg
+
+two:
+cmp bh,40h
+jne three
+mov bl,02h  ;2
+call seg
+
+three:
+cmp bh,60h
+jne four
+mov bl,03h  ;3
+call seg
+
+four:
+cmp bh,80h
+jne five
+mov bl,04h  ;4
+call seg
+
+five:
+cmp bh,90h
+mov bl,05h  ;5
+call seg 
+    ret
+endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+incr proc 
+    mov dx,0
+    cmp bx,dx
+    jz  print1
+    sub bx,20
+
+    print1:
+    mov al,0Ah    
+    out ah,al
+
+cmp bx,00h
+jne one1
+mov bl,00h  ; 0 
+call seg
+
+one1:
+cmp bh,20h
+jne two1
+mov bl,01h  ;1
+call seg
+
+two1:
+cmp bh,40h
+jne three1
+mov bl,02h  ;2
+call seg
+
+three1:
+cmp bh,60h
+jne four1
+mov bl,03h  ;3
+call seg
+
+four1:
+cmp bh,80h
+jne five1
+mov bl,04h  ;4
+call seg
+
+five1:
+cmp bh,90h
+mov bl,05h  ;5
+call seg 
+
+ret
+endp
+
+seg proc
+
+mov al,bl
+mov dx,80h
+out dx,al
+call delay
+endp
+
+
+delay PROC NEAR
+    
+     MOV CX,50 
+   L:
+      NOP
+      LOOP L
+      RET
+      
+delay ENDP 
